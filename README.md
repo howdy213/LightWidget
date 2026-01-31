@@ -1,6 +1,8 @@
 # LightWidget
 ## 项目介绍
 本项目提供一个简易Qt插件框架示例
+
+该仓库暂时停止更新，但可在[WidgetExplorer](https://github.com/howdy213/WidgetExplorer)中获取后续进展
 ## 环境依赖
 Qt6 (MSVC2022 64bit)
 ## 目录结构
