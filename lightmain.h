@@ -1,11 +1,11 @@
 /**
- * @file exampleplugin.h
- * @brief 示例插件类头文件
+ * @file lightmain.h
+ * @brief 轻量MainWidget头文件
  * @author howdy213
- * @date 2025-07-11
- * @version 1.0.0
+ * @date 2026-1-30
+ * @version 1.1.0
  *
- * Copyright 2025 howdy213
+ * Copyright 2025-2026 howdy213
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,30 +21,33 @@
  */
 #ifndef EXAMPLEPLUGIN_H
 #define EXAMPLEPLUGIN_H
-#include"exampledialog.h"
-#include"examplewidget.h"
-#include"../WidgetExplorerSDK/WPlugin/wplugininterface.h"
-#include"../WidgetExplorerSDK/WPlugin/wpluginmanager.h"
+#include "WECore/WPlugin/wplugininterface.h"
 
-#include<QObject>
-#include<QtPlugin>
+#include <QObject>
+#include <QtPlugin>
 
-class ExamplePlugin :public QObject, public WPluginInterface
-{
+class LightMainPrivate;
+class WE_NAMESPACE::LightMain : public QObject, public WPluginInterface {
 public:
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID PluginInterface_iid)
+    Q_PLUGIN_METADATA(IID WPluginInterfaceIID)
     Q_INTERFACES(WPluginInterface)
-    W_DECLARE_PLUGIN(ExamplePlugin);
+    W_DECLARE_PLUGIN(LightMain);
 signals:
-    void sendMsg(WMetaData&);
+    void sendMsg(WMetaData &);
+
 public:
-    ExamplePlugin();
-    ~ExamplePlugin();
-    void init(QMap<QString,QVariant> &data) override;
+    LightMain();
+    ~LightMain();
+    bool init(WMetaData &msg) override;
     void recMsg(WMetaData &msg) override;
+    bool deinit(WMetaData &msg) override;
+
+public:
+    void createTray();
+
 private:
-    ExampleWidget* widget=nullptr;
+    LightMainPrivate *d = nullptr;
 };
 
 #endif // EXAMPLEPLUGIN_H

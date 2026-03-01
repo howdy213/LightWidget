@@ -1,11 +1,11 @@
 /**
- * @file lightsystem.h
- * @brief 轻量插件加载系统头文件
+ * @file aboutwindow.h
+ * @brief 关于窗口类头文件
  * @author howdy213
- * @date 2025-07-11
- * @version 1.0.0
+ * @date 2026-1-30
+ * @version 1.1.0
  *
- * Copyright 2025 howdy213
+ * Copyright 2025-2026 howdy213
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,23 +19,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIGHTSYSTEM_H
-#define LIGHTSYSTEM_H
-#include"../WidgetExplorerSDK/WDef/wedef.h"
+#ifndef ABOUTWINDOW_H
+#define ABOUTWINDOW_H
+#include <QWidget>
 
-#include<QString>
+namespace Ui {
+class AboutWindow;
+}
 
-class LightSystemPrivate;
-class LightSystem
-{
+class AboutWindow : public QWidget {
+    Q_OBJECT
 public:
-    LightSystem();
-    virtual ~LightSystem();
-    void loadAllPlugin();
-    void loadPlugin(QString jsonPath, QString config);
-    void loadSinglePlugin(QString jsonPath, WConfigDocument* doc);
+    explicit AboutWindow(QWidget *parent = nullptr);
+    ~AboutWindow();
+
 private:
-    LightSystemPrivate* d=nullptr;
+    Ui::AboutWindow *ui;
 };
 
-#endif // LIGHTSYSTEM_H
+#endif // ABOUTWINDOW_H

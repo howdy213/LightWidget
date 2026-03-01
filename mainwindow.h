@@ -2,10 +2,10 @@
  * @file mainwindow.h
  * @brief 主窗口类头文件
  * @author howdy213
- * @date 2025-07-11
- * @version 1.0.0
+ * @date 2026-1-30
+ * @version 1.1.0
  *
- * Copyright 2025 howdy213
+ * Copyright 2025-2026 howdy213
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,38 +21,43 @@
  */
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
-#include"../WidgetExplorerSDK/WDef/wedef.h"
-#include"../WidgetExplorerSDK/WPlugin/wplugin.h"
+#include "WECore/WDef/wedef.h"
+#include "WECore/WPlugin/wplugin.h"
 
-#include<QMainWindow>
-#include<QListWidget>
-#include<QCloseEvent>
-#include<QSystemTrayIcon>
-#include<QLockFile>
+#include <QCloseEvent>
+#include <QListWidget>
+#include <QLockFile>
+#include <QMainWindow>
+#include <QSystemTrayIcon>
 
-namespace Ui { class MainWindow; }
+namespace Ui {
+class MainWindow;
+}
 
 class MainWindowPrivate;
-class MainWindow : public QMainWindow
-{
+class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
-    MainWindow(QStringList param, LightWidget *ptr, QWidget *parent = nullptr);
+    MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
 private:
     void initWindow();
     void initPlugin();
     void initList();
     void initTable();
     void initMenu();
+
 private:
-    void createCol(int col,QString title,QFont font,QColor color);
-    void createRow(int row,  WPlugin *info);
+    void createCol(int col, QString title, QFont font, QColor color);
+    void createRow(int row, WPlugin *info);
     QStringList ReadLinkFile();
+
 public:
-    void setLockFile(QLockFile* file);
     void closeEvent(QCloseEvent *event);
     void tray(QSystemTrayIcon::ActivationReason reason);
+    bool sendMsgs(QString widgetName, QMap<QString, QVariant> map);
+    void recMsgs(WMetaData &msg);
 public slots:
     void showPanel();
 private slots:
@@ -63,8 +68,8 @@ private slots:
     void on_tableWidget_cellDoubleClicked(int row, int column);
     void on_btnCmd_clicked();
     void on_btnClear_clicked();
+
 private:
-    Ui::MainWindow *ui=nullptr;
-    MainWindowPrivate* d=nullptr;
+    MainWindowPrivate *d = nullptr;
 };
 #endif // MAINWINDOW_H
