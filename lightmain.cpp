@@ -63,7 +63,7 @@ bool LightMain::init(WMetaData &msg) {
     if (d->inited)
         return false;
     d->inited = true;
-
+    qApp->setQuitOnLastWindowClosed(false);
     auto we = qvariant_cast<WEBase *>(msg.map[Data::WEBase]);
     PluginData::setData(we);
     auto plugin = qvariant_cast<WPlugin *>(msg.map[Data::Plugin]);

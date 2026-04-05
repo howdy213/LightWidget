@@ -1,3 +1,5 @@
+中文 | [English](README_en.md)
+
 # LightWidget
 
 LightWidget 是 [WidgetExplorer](https://github.com/howdy213/WidgetExplorer) 框架的一个核心插件，提供了一个简洁的主窗口界面，用于管理其他插件、发送命令以及显示系统托盘图标。编译项目将生成LightMain.dll，并作为默认的 `MainWidget`，让用户能够快速浏览已加载插件、执行命令并访问基本设置。
