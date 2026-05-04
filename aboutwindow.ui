@@ -73,7 +73,7 @@
    <item row="2" column="0" colspan="3">
     <widget class="QLabel" name="labelLink">
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;LightWidget v1.1.0&lt;/span&gt;&lt;br/&gt;Copyright © 2025-2026 howdy213. &lt;br/&gt;All rights reserved. &lt;br/&gt;许可证:Apache-2.0 license &lt;br/&gt;&lt;a href=&quot;http://www.github.com/howdy213/WidgetExplorer&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#1f9b5d;&quot;&gt;访问github仓库&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;LightWidget v2.0.0&lt;/span&gt;&lt;br/&gt;Copyright © 2025-2026 howdy213. &lt;br/&gt;All rights reserved. &lt;br/&gt;许可证:Apache-2.0 license &lt;br/&gt;&lt;a href=&quot;http://www.github.com/howdy213/WidgetExplorer&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#1f9b5d;&quot;&gt;访问github仓库&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignmentFlag::AlignCenter</set>

@@ -1,11 +1,11 @@
 /**
  * @file mainwindow.h
- * @brief 主窗口类头文件
+ * @brief Header file for the main window class.
  * @author howdy213
- * @date 2026-1-30
- * @version 1.1.0
+ * @date 2026-05-04
+ * @version 2.0.0
  *
- * Copyright 2025-2026 howdy213
+ * @copyright Copyright 2025-2026 howdy213
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@
  */
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
-#include "WECore/WDef/wedef.h"
-#include "WECore/WPlugin/wplugin.h"
+#include "WECore/def/wedef.h"
+#include "WECore/plugin/wplugin.h"
 
 #include <QCloseEvent>
 #include <QListWidget>
@@ -35,11 +35,19 @@ class MainWindow;
 }
 
 class MainWindowPrivate;
+/**
+ * @class MainWindow
+ * @brief The main application window.
+ */
 class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
-    MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    void init();
+    void addToolBarAction(QAction *action);
+    void addExtensionDock(QDockWidget *dock);
+    Ui::MainWindow *getUiPointer();
 
 private:
     void initWindow();
@@ -50,26 +58,26 @@ private:
 
 private:
     void createCol(int col, QString title, QFont font, QColor color);
-    void createRow(int row, WPlugin *info);
+    void createRow(int row, we::WPlugin *info);
     QStringList ReadLinkFile();
 
 public:
-    void closeEvent(QCloseEvent *event);
+    void closeEvent(QCloseEvent *event) override;
     void tray(QSystemTrayIcon::ActivationReason reason);
-    bool sendMsgs(QString widgetName, QMap<QString, QVariant> map);
-    void recMsgs(WMetaData &msg);
+    void recMsgs(we::WMessage &msg);
 public slots:
     void showPanel();
 private slots:
     void about();
     void restart();
-private slots:
-    void on_listLink_itemClicked(QListWidgetItem *item);
+    void on_tablePlugin_cellDoubleClicked(int row, int column);
     void on_tableWidget_cellDoubleClicked(int row, int column);
     void on_btnCmd_clicked();
     void on_btnClear_clicked();
+    void on_tabWidget_tabBarClicked(int index);
 
 private:
     MainWindowPrivate *d = nullptr;
+    void initWidgetTable();
 };
 #endif // MAINWINDOW_H

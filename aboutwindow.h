@@ -1,11 +1,11 @@
 /**
  * @file aboutwindow.h
- * @brief 关于窗口类头文件
+ * @brief Header file for the About window.
  * @author howdy213
- * @date 2026-1-30
- * @version 1.1.0
+ * @date 2026-05-04
+ * @version 2.0.0
  *
- * Copyright 2025-2026 howdy213
+ * @copyright Copyright 2025-2026 howdy213
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,16 +19,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef ABOUTWINDOW_H
 #define ABOUTWINDOW_H
+
 #include <QWidget>
 
 namespace Ui {
 class AboutWindow;
 }
 
+/**
+ * @class AboutWindow
+ * @brief A widget that displays information about the application.
+ */
 class AboutWindow : public QWidget {
     Q_OBJECT
+
 public:
     explicit AboutWindow(QWidget *parent = nullptr);
     ~AboutWindow();

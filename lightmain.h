@@ -1,11 +1,11 @@
 /**
  * @file lightmain.h
- * @brief 轻量MainWidget头文件
+ * @brief Header file for a light MainWidget.
  * @author howdy213
- * @date 2026-1-30
- * @version 1.1.0
+ * @date 2026-05-04
+ * @version 2.0.0
  *
- * Copyright 2025-2026 howdy213
+ * @copyright Copyright 2025-2026 howdy213
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,35 +19,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXAMPLEPLUGIN_H
-#define EXAMPLEPLUGIN_H
-#include "WECore/WPlugin/wplugininterface.h"
-
+#ifndef LIGHTMAIN_H
+#define LIGHTMAIN_H
+#include <QAction>
+#include <QMainWindow>
 #include <QObject>
 #include <QtPlugin>
 
+#include "WECore/plugin/wplugininterface.h"
+
+namespace we {
 class LightMainPrivate;
-class WE_NAMESPACE::LightMain : public QObject, public WPluginInterface {
+/**
+ * @class LightMain
+ * @brief Main widget implementation for the lightweight WidgetExplorer.
+ */
+class LightMain : public QObject, public WPluginInterface {
 public:
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID WPluginInterfaceIID)
+    Q_PLUGIN_METADATA(IID WPluginInterface_iid)
     Q_INTERFACES(WPluginInterface)
-    W_DECLARE_PLUGIN(LightMain);
-signals:
-    void sendMsg(WMetaData &);
-
 public:
     LightMain();
     ~LightMain();
-    bool init(WMetaData &msg) override;
-    void recMsg(WMetaData &msg) override;
-    bool deinit(WMetaData &msg) override;
+    bool init(WMessage &msg) override;
+    void recMsg(WMessage &msg) override;
+    bool deinit(WMessage &msg) override;
 
 public:
     void createTray();
 
 private:
     LightMainPrivate *d = nullptr;
-};
+    void onMainWindowExtension(const WEvent &event);
+    QVariant onGetMainWindowState(const WEvent &event);
+    void addExtensionAction(QAction *action, const QString &menuPath);
 
-#endif // EXAMPLEPLUGIN_H
+    QList<QAction *> m_pluginActions;
+    QList<QDockWidget *> m_pluginDocks;
+};
+} // namespace we
+
+#endif // LIGHTMAIN_H

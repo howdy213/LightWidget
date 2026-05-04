@@ -1,6 +1,6 @@
 /**
- * @file aboutwindow.cpp
- * @brief Implementation file for the About window.
+ * @file iLightMain.h
+ * @brief Defines constant namespaces for event and key identifiers used in the main application interface.
  * @author howdy213
  * @date 2026-05-04
  * @version 2.0.0
@@ -20,23 +20,22 @@
  * limitations under the License.
  */
 
-#include "aboutwindow.h"
-#include "ui_aboutwindow.h"
+#ifndef ILIGHTMAIN_H
+#define ILIGHTMAIN_H
 
-/**
- * @brief Constructs the AboutWindow and sets up its UI.
- * @param parent The parent widget.
- *
- * Initializes the user interface and ensures that the link label
- * opens external URLs in the default web browser.
- */
-AboutWindow::AboutWindow(QWidget *parent)
-    : QWidget(parent), ui(new Ui::AboutWindow) {
-    ui->setupUi(this);
-    ui->labelLink->setOpenExternalLinks(true);
-}
+namespace LightWidget {
+namespace Consts {
+namespace Event {
+constexpr auto MenuAction = "MenuAction";
+constexpr auto ToolAction = "ToolAction";
+constexpr auto Tab = "Tab";
+} // namespace Event
 
-/**
- * @brief Destructor, cleans up the UI.
- */
-AboutWindow::~AboutWindow() { delete ui; }
+namespace Key {
+constexpr auto MenuPath = "menuPath";
+constexpr auto TabTitle = "title";
+} // namespace Key
+} // namespace Consts
+} // namespace LightWidget
+
+#endif // ILIGHTMAIN_H

@@ -20,8 +20,9 @@ unix {
     target.path = $$[QT_INSTALL_PLUGINS]/generic
 }
 !isEmpty(target.path): INSTALLS += target
-
+INCLUDEPATH +=../../deps/WECore/include
 include(../../deps/WECore/WECore.pri)
+include(../../deps/Shared.pri)
 INCLUDEPATH +=\
     ../../deps/
 SOURCES +=  \
@@ -29,6 +30,7 @@ SOURCES +=  \
     lightmain.cpp \
     mainwindow.cpp
 HEADERS +=  \
+    ILightMain.h \
     aboutwindow.h \
     lightmain.h \
     mainwindow.h
