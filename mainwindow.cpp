@@ -23,7 +23,7 @@
 #include "WECore/plugin/wpluginmanager.h"
 #include "aboutwindow.h"
 #include "ui_mainwindow.h"
-#include "Shared/flowlayout.h"
+#include "WECore/utils/flowlayout.h"
 
 #include "WECore/def/wedef.h"
 #include "WECore/we/we.h"
