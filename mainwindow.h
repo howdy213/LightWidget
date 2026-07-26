@@ -70,6 +70,7 @@ public slots:
 private slots:
     void about();
     void restart();
+    void openSettings();
     void on_tablePlugin_cellDoubleClicked(int row, int column);
     void on_tableWidget_cellDoubleClicked(int row, int column);
     void on_btnCmd_clicked();

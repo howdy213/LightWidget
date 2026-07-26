@@ -22,7 +22,6 @@ unix {
 !isEmpty(target.path): INSTALLS += target
 INCLUDEPATH +=../../deps/WECore/include
 include(../../deps/WECore/WECore.pri)
-include(../../deps/Shared.pri)
 INCLUDEPATH +=\
     ../../deps/
 SOURCES +=  \

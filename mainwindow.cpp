@@ -20,18 +20,22 @@
  * limitations under the License.
  */
 #include "mainwindow.h"
+#include "WECore/metadata/WMetaDocument.h"
 #include "WECore/plugin/wpluginmanager.h"
+#include "WECore/utils/flowlayout.h"
 #include "aboutwindow.h"
 #include "ui_mainwindow.h"
-#include "WECore/utils/flowlayout.h"
 
+#include "WECore/config/WConfig.h"
+#include "WECore/config/WConfigTemplate.h"
+#include "WECore/config/WConfigWidget.h"
 #include "WECore/def/wedef.h"
-#include "WECore/we/we.h"
-#include "WECore/we/webase.h"
 #include "WECore/file/wpath.h"
 #include "WECore/file/wshellexecute.h"
-#include "WECore/widget/wwidgetmanager.h"
 #include "WECore/plugin/wplugindata.h"
+#include "WECore/we/we.h"
+#include "WECore/we/webase.h"
+#include "WECore/widget/wwidgetmanager.h"
 
 #include <QButtonGroup>
 #include <QFile>
@@ -40,6 +44,7 @@
 #include <QToolBar>
 
 using namespace we::Consts;
+using namespace we::config;
 using namespace we;
 
 /**
@@ -75,8 +80,7 @@ MainWindow::~MainWindow() {
 /**
  * @brief Initializes the main window after construction.
  */
-void MainWindow::init()
-{
+void MainWindow::init() {
     initWindow();
     initPlugin();
     initList();
@@ -91,8 +95,9 @@ void MainWindow::init()
  * @param action The action to add.
  */
 void MainWindow::addToolBarAction(QAction *action) {
-    if (!action) return;
-    QToolBar *toolbar = findChild<QToolBar*>();
+    if (!action)
+        return;
+    QToolBar *toolbar = findChild<QToolBar *>();
     if (!toolbar) {
         toolbar = addToolBar("插件工具");
     }
@@ -104,7 +109,8 @@ void MainWindow::addToolBarAction(QAction *action) {
  * @param dock The dock widget to add.
  */
 void MainWindow::addExtensionDock(QDockWidget *dock) {
-    if (!dock) return;
+    if (!dock)
+        return;
     addDockWidget(Qt::RightDockWidgetArea, dock);
 }
 
@@ -112,10 +118,7 @@ void MainWindow::addExtensionDock(QDockWidget *dock) {
  * @brief Returns a pointer to the UI object.
  * @return Pointer to the main window's UI.
  */
-Ui::MainWindow *MainWindow::getUiPointer()
-{
-    return d->ui;
-}
+Ui::MainWindow *MainWindow::getUiPointer() { return d->ui; }
 
 /**
  * @brief Initializes window properties (size, background, etc.).
@@ -146,8 +149,7 @@ void MainWindow::initPlugin() {
 /**
  * @brief Initializes the list of buttons from the link file.
  */
-void MainWindow::initList()
-{
+void MainWindow::initList() {
     QStringList links = ReadLinkFile();
     QWidget *btnContainer = d->ui->btnWidget;
     if (!btnContainer) {
@@ -165,7 +167,7 @@ void MainWindow::initList()
         }
         delete oldLayout;
     } else {
-        QList<QPushButton*> btns = btnContainer->findChildren<QPushButton*>();
+        QList<QPushButton *> btns = btnContainer->findChildren<QPushButton *>();
         for (QPushButton *btn : std::as_const(btns))
             delete btn;
     }
@@ -182,9 +184,8 @@ void MainWindow::initList()
         btn->setMinimumHeight(100);
         btn->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
         btn->setToolTip(link);
-        connect(btn, &QPushButton::clicked, this, [this,link]() {
-            this->d->ui->editCmd->setText(link);
-        });
+        connect(btn, &QPushButton::clicked, this,
+                [this, link]() { this->d->ui->editCmd->setText(link); });
 
         flowLayout->addWidget(btn);
     }
@@ -311,9 +312,7 @@ void MainWindow::initMenu() {
 
     connect(actAbout, &QAction::triggered, this, &MainWindow::about);
     connect(actReset, &QAction::triggered, this, &MainWindow::restart);
-    connect(actSetting, &QAction::triggered, this, []() {
-        WShellExecute::syncExecute(WPath().getModuleFolder() + Config::ConfigPath);
-    });
+    connect(actSetting, &QAction::triggered, this, &MainWindow::openSettings);
 }
 
 /**
@@ -418,12 +417,48 @@ void MainWindow::about() {
  * @brief Restarts the application via launcher.
  */
 void MainWindow::restart() {
-    WShellExecute::asyncExecute(WPath().getModuleFolder()+"tools/WELauncher.exe","open","-t 500");
+    WShellExecute::asyncExecute(
+        WPath().getModuleFolder() + "tools/WELauncher.exe", "open", "-t 500");
     QApplication::exit(0);
 }
 
 /**
- * @brief Handles double-click on plugin table: sets clicked text to command line.
+ * @brief MainWindow::openSettings
+ */
+void MainWindow::openSettings() {
+    static WConfig *config = new WConfig;
+    if (!config) {
+        qWarning() << "Failed to get WConfig instance.";
+        return;
+    }
+    WConfigTemplate configTemplate;
+    QString mainWidget = WE::inst()
+                             ->getWEClass()
+                             ->configManager()
+                             ->get(Plugin::MainWidget)
+                             .toString();
+    configTemplate.addString(
+        "", "MainWidget",
+        WConfigItemInfo().defaultValue(mainWidget).displayName("主控件绝对路径"));
+    configTemplate.addDouble(
+        "", "Scale",
+        WConfigItemInfo().defaultValue(1.0).decimalPlaces(1).displayName("缩放"));
+    configTemplate.addInt(
+        "", "Font", WConfigItemInfo().defaultValue(96).displayName("字体缩放"));
+    configTemplate.setViewerMeta("","设置","设置根目录");
+    config->initialize(WPath().getModuleFolder() + Config::ConfigPath,
+                       &configTemplate);
+    // Create a new config widget for the settings
+    static WConfigWidget *settingsWidget = new WConfigWidget(config, this);
+    settingsWidget->setWindowTitle("Settings");
+    settingsWidget->resize(600, 400);
+    settingsWidget->show();
+    config->setParent(this);
+}
+
+/**
+ * @brief Handles double-click on plugin table: sets clicked text to command
+ * line.
  * @param row Row index.
  * @param column Column index.
  */
@@ -449,7 +484,7 @@ void MainWindow::on_btnCmd_clicked() {
     if (firstChar == '"') {
         int endIdx = -1;
         for (int i = 1; i < str.length(); ++i) {
-            if (str[i] == firstChar && (i == 0 || str[i-1] != '\\')) {
+            if (str[i] == firstChar && (i == 0 || str[i - 1] != '\\')) {
                 endIdx = i;
                 break;
             }
@@ -499,11 +534,9 @@ void MainWindow::on_btnClear_clicked() { d->ui->editCmd->clear(); }
  * @brief Refreshes the table content when the tab bar is clicked.
  * @param index Index of the clicked tab.
  */
-void MainWindow::on_tabWidget_tabBarClicked(int index)
-{
+void MainWindow::on_tabWidget_tabBarClicked(int index) {
     switch (index) {
-    case 0:
-    {
+    case 0: {
         d->ui->tablePlugin->clearContents();
         auto pluginList = PClass->pluginManager()->allPluginsInst();
         d->ui->tablePlugin->setRowCount(pluginList.size());
@@ -512,14 +545,15 @@ void MainWindow::on_tabWidget_tabBarClicked(int index)
         }
         break;
     }
-    case 1:
-    {
+    case 1: {
         d->ui->tableWidget->clearContents();
         auto widgets = PClass->widgetManager()->getWidgets();
         d->ui->tableWidget->setRowCount(widgets.size());
         for (int i = 0; i < widgets.size(); ++i) {
-            QString name = PClass->widgetManager()->getAttr(widgets[i], Widget::Name).toString();
-            QString desc = PClass->widgetManager()->getAttr(widgets[i], Widget::Desc).toString();
+            QString name =
+                PClass->widgetManager()->getAttr(widgets[i], Widget::Name).toString();
+            QString desc =
+                PClass->widgetManager()->getAttr(widgets[i], Widget::Desc).toString();
             d->ui->tableWidget->setItem(i, 0, new QTableWidgetItem(name));
             d->ui->tableWidget->setItem(i, 1, new QTableWidgetItem(desc));
         }
