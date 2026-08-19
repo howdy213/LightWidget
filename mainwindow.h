@@ -29,6 +29,13 @@
 #include <QLockFile>
 #include <QMainWindow>
 #include <QSystemTrayIcon>
+#include <QDialog>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QTableWidget>
+#include <QTableWidgetItem>
+#include <QPushButton>
+#include <QHeaderView>
 
 namespace Ui {
 class MainWindow;
@@ -48,6 +55,7 @@ public:
     void addToolBarAction(QAction *action);
     void addExtensionDock(QDockWidget *dock);
     Ui::MainWindow *getUiPointer();
+    void createPluginMenu();
 
 private:
     void initWindow();
@@ -57,9 +65,12 @@ private:
     void initMenu();
 
 private:
+    void initWidgetTable();
     void createCol(int col, QString title, QFont font, QColor color);
     void createRow(int row, we::WPlugin *info);
     QStringList ReadLinkFile();
+    void showPluginManager();
+    void updatePluginTable(QTableWidget *table);
 
 public:
     void closeEvent(QCloseEvent *event) override;
@@ -79,6 +90,5 @@ private slots:
 
 private:
     MainWindowPrivate *d = nullptr;
-    void initWidgetTable();
 };
 #endif // MAINWINDOW_H

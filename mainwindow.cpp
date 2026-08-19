@@ -22,6 +22,7 @@
 #include "mainwindow.h"
 #include "WECore/metadata/WMetaDocument.h"
 #include "WECore/plugin/wpluginmanager.h"
+#include "WECore/plugin/wpluginstatemachine.h"
 #include "WECore/utils/flowlayout.h"
 #include "aboutwindow.h"
 #include "ui_mainwindow.h"
@@ -42,6 +43,7 @@
 #include <QLockFile>
 #include <QPluginLoader>
 #include <QToolBar>
+#include <qaction.h>
 
 using namespace we::Consts;
 using namespace we::config;
@@ -87,6 +89,7 @@ void MainWindow::init() {
     initTable();
     initWidgetTable();
     initMenu();
+    createPluginMenu();
     PClass->widgetManager()->initWidget();
 }
 
@@ -100,31 +103,222 @@ void MainWindow::addToolBarAction(QAction *action) {
     QToolBar *toolbar = findChild<QToolBar *>();
     if (!toolbar) {
         toolbar = addToolBar("插件工具");
+        toolbar->setObjectName("PluginToolbar");
     }
     toolbar->addAction(action);
 }
 
 /**
- * @brief Adds a dock widget as an extension.
+ * @brief Adds an extension dock widget.
  * @param dock The dock widget to add.
  */
 void MainWindow::addExtensionDock(QDockWidget *dock) {
     if (!dock)
         return;
-    addDockWidget(Qt::RightDockWidgetArea, dock);
+    addDockWidget(Qt::LeftDockWidgetArea, dock);
 }
 
 /**
- * @brief Returns a pointer to the UI object.
- * @return Pointer to the main window's UI.
+ * @brief Gets the UI pointer for accessing UI elements.
+ * @return Pointer to the UI structure.
  */
-Ui::MainWindow *MainWindow::getUiPointer() { return d->ui; }
+Ui::MainWindow *MainWindow::getUiPointer() {
+    return d->ui;
+}
 
 /**
- * @brief Initializes window properties (size, background, etc.).
+ * @brief Creates the plugin management menu.
+ */
+void MainWindow::createPluginMenu() {
+    // Plugin menu is already created in initMenu()
+}
+
+/**
+ * @brief Shows the plugin manager dialog.
+ */
+void MainWindow::showPluginManager() {
+    QDialog dialog(this);
+    dialog.setWindowTitle("插件管理");
+    dialog.setModal(true);
+    dialog.resize(600, 400);
+    
+    QVBoxLayout *layout = new QVBoxLayout(&dialog);
+    
+    // Create table widget for plugin information
+    QTableWidget *pluginTable = new QTableWidget(&dialog);
+    pluginTable->setColumnCount(7);
+    pluginTable->setHorizontalHeaderLabels({
+        "名称", "LocalUuid", "UUID", "类型", "状态", "路径", "作者"
+    });
+    
+    // Get plugin manager
+    auto manager = PClass->pluginManager();
+    auto plugins = manager->allPluginsInst();
+    
+    // Populate table with plugin information
+    pluginTable->setRowCount(plugins.size());
+    int row = 0;
+    
+    for (auto plugin : plugins) {
+        // Plugin name
+        QTableWidgetItem *nameItem = new QTableWidgetItem(plugin->getMetaData(Plugin::Name).toString());
+        pluginTable->setItem(row, 0, nameItem);
+        
+        // LocalUuid
+        QTableWidgetItem *localUuidItem = new QTableWidgetItem(plugin->getLocalUuid().toString());
+        pluginTable->setItem(row, 1, localUuidItem);
+        
+        // UUID
+        QTableWidgetItem *uuidItem = new QTableWidgetItem(plugin->getUuid().toString());
+        pluginTable->setItem(row, 2, uuidItem);
+        
+        // Type
+        QTableWidgetItem *typeItem = new QTableWidgetItem(plugin->getMetaData(Plugin::Type).toString());
+        pluginTable->setItem(row, 3, typeItem);
+        
+        // State
+        QString stateStr = WPluginStateMachine::stateToString(plugin->getState());
+        QTableWidgetItem *stateItem = new QTableWidgetItem(stateStr);
+        pluginTable->setItem(row, 4, stateItem);
+        
+        // Path
+        QTableWidgetItem *pathItem = new QTableWidgetItem(plugin->getMetaData(Plugin::Path).toString());
+        pluginTable->setItem(row, 5, pathItem);
+        
+        // Author
+        QTableWidgetItem *authorItem = new QTableWidgetItem(plugin->getMetaData(Plugin::Author).toString());
+        pluginTable->setItem(row, 6, authorItem);
+        
+        // Add custom metadata (expandable)
+        for (int col = 6; col < pluginTable->columnCount(); ++col) {
+            QString key = pluginTable->horizontalHeaderItem(col)->text();
+            if (plugin->hasMetaData(key)) {
+                QTableWidgetItem *metaItem = new QTableWidgetItem(plugin->getMetaData(key).toString());
+                pluginTable->setItem(row, col, metaItem);
+            }
+        }
+        
+        row++;
+    }
+    
+    pluginTable->horizontalHeader()->setStretchLastSection(true);
+    pluginTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    pluginTable->setSelectionMode(QAbstractItemView::SingleSelection);
+    
+    layout->addWidget(pluginTable);
+    
+    // Create button layout
+    QHBoxLayout *buttonLayout = new QHBoxLayout();
+    
+    QPushButton *loadButton = new QPushButton("加载", &dialog);
+    QPushButton *unloadButton = new QPushButton("卸载", &dialog);
+    QPushButton *refreshButton = new QPushButton("刷新", &dialog);
+    QPushButton *closeButton = new QPushButton("关闭", &dialog);
+    
+    buttonLayout->addWidget(loadButton);
+    buttonLayout->addWidget(unloadButton);
+    buttonLayout->addWidget(refreshButton);
+    buttonLayout->addWidget(closeButton);
+    
+    layout->addLayout(buttonLayout);
+    
+    // Connect button signals
+    QObject::connect(refreshButton, &QPushButton::clicked, [&]() {
+        updatePluginTable(pluginTable);
+    });
+    
+    QObject::connect(loadButton, &QPushButton::clicked, [&]() {
+        QList<QTableWidgetItem *> selected = pluginTable->selectedItems();
+        if (!selected.isEmpty()) {
+            int row = selected.first()->row();
+            QUuid uuid = QUuid(pluginTable->item(row, 1)->text());
+            WPlugin *plugin = manager->getPluginById(uuid);
+            if (plugin && !plugin->available()) {
+                manager->loadPlugin(plugin);
+                manager->initPlugin(plugin);
+                updatePluginTable(pluginTable);
+            }
+        }
+    });
+    
+    QObject::connect(unloadButton, &QPushButton::clicked, [&]() {
+        QList<QTableWidgetItem *> selected = pluginTable->selectedItems();
+        if (!selected.isEmpty()) {
+            int row = selected.first()->row();
+            QUuid uuid = QUuid(pluginTable->item(row, 1)->text());
+            WPlugin *plugin = manager->getPluginById(uuid);
+            if (plugin && plugin->available()) {
+                // Use hot unload to keep plugin in registry
+                manager->hotUnloadPlugin(plugin);
+                updatePluginTable(pluginTable);
+            }
+        }
+    });
+    
+    QObject::connect(closeButton, &QPushButton::clicked, &dialog, &QDialog::accept);
+    
+    dialog.exec();
+}
+
+/**
+ * @brief Updates the plugin table with current plugin information.
+ * @param table The table widget to update.
+ */
+void MainWindow::updatePluginTable(QTableWidget *table) {
+    if (!table) return;
+    
+    auto manager = PClass->pluginManager();
+    auto plugins = manager->allPluginsInst();
+    
+    table->setRowCount(plugins.size());
+    int row = 0;
+    
+    for (auto plugin : plugins) {
+        // Plugin name
+        QTableWidgetItem *nameItem = new QTableWidgetItem(plugin->getMetaData(Plugin::Name).toString());
+        table->setItem(row, 0, nameItem);
+        
+        // UUID
+        QTableWidgetItem *uuidItem = new QTableWidgetItem(plugin->getUuid().toString());
+        table->setItem(row, 1, uuidItem);
+        
+        // Type
+        QTableWidgetItem *typeItem = new QTableWidgetItem(plugin->getMetaData(Plugin::Type).toString());
+        table->setItem(row, 2, typeItem);
+        
+        // State
+        QString stateStr = WPluginStateMachine::stateToString(plugin->getState());
+        QTableWidgetItem *stateItem = new QTableWidgetItem(stateStr);
+        table->setItem(row, 3, stateItem);
+        
+        // Path
+        QTableWidgetItem *pathItem = new QTableWidgetItem(plugin->getMetaData(Plugin::Path).toString());
+        table->setItem(row, 4, pathItem);
+        
+        // Author
+        QTableWidgetItem *authorItem = new QTableWidgetItem(plugin->getMetaData(Plugin::Author).toString());
+        table->setItem(row, 5, authorItem);
+        
+        // Add custom metadata columns
+        for (int col = 6; col < table->columnCount(); ++col) {
+            QString key = table->horizontalHeaderItem(col)->text();
+            if (plugin->hasMetaData(key)) {
+                QTableWidgetItem *metaItem = new QTableWidgetItem(plugin->getMetaData(key).toString());
+                table->setItem(row, col, metaItem);
+            }
+        }
+        
+        row++;
+    }
+}
+
+/**
+ * @brief Initializes the window properties.
  */
 void MainWindow::initWindow() {
-    this->resize(1200, 800);
+    setWindowTitle("WidgetExplorer");
+    setMinimumSize(800, 600);
+        this->resize(1200, 800);
     this->setMinimumSize(800, 566);
 
     QPalette pal(this->palette());
@@ -134,7 +328,7 @@ void MainWindow::initWindow() {
 }
 
 /**
- * @brief Loads and initializes all plugins.
+ * @brief Initializes the plugin system.
  */
 void MainWindow::initPlugin() {
     auto man = PClass->pluginManager();
@@ -198,27 +392,18 @@ void MainWindow::initTable() {
     d->ui->tablePlugin->setEditTriggers(QAbstractItemView::NoEditTriggers);
     d->ui->tablePlugin->setSelectionMode(QAbstractItemView::NoSelection);
 
-    QFont font;
-    font.setPointSize(10);
-    font.setFamily("黑体");
 
-    QColor color(0, 0, 0);
-
-    int colCount = 4;
-
-    d->ui->tablePlugin->setColumnCount(colCount);
-
-    createCol(0, "插件名", font, color);
-    createCol(1, "版本", font, color);
-    createCol(2, "作者", font, color);
-    createCol(3, "路径", font, color);
-
-    auto list = WE::inst()->getWEClass()->pluginManager()->allPluginsInst();
-    d->ui->tablePlugin->setRowCount(list.length());
-    auto it = list.begin();
-    for (int i = 0; i <= list.length() - 1; i++) {
-        createRow(i, *it);
-        it++;
+    d->ui->tablePlugin->clear();
+    d->ui->tablePlugin->setColumnCount(6);
+    QStringList headers;
+    headers << "名称" << "UUID" << "类型" << "状态" << "路径" << "作者";
+    d->ui->tablePlugin->setHorizontalHeaderLabels(headers);
+    
+    auto pluginList = PClass->pluginManager()->allPluginsInst();
+    d->ui->tablePlugin->setRowCount(pluginList.size());
+    
+    for (int i = 0; i < pluginList.size(); ++i) {
+        createRow(i, pluginList[i]);
     }
 }
 
@@ -294,6 +479,7 @@ void MainWindow::initMenu() {
     QAction *actNew = new QAction("创建新插件");
     QAction *actImport = new QAction("导入现有插件");
     QAction *actExport = new QAction("导出");
+    QAction *actShowPluginManager = new QAction("显示插件管理器");
     QMenu *menuOption = new QMenu("选项");
     QAction *actSetting = new QAction("设置");
     QAction *actReset = new QAction("重启");
@@ -304,6 +490,7 @@ void MainWindow::initMenu() {
     menuPlugin->addAction(actNew);
     menuPlugin->addAction(actImport);
     menuPlugin->addAction(actExport);
+    menuPlugin->addAction(actShowPluginManager);
     menuBar->addMenu(menuOption);
     menuOption->addAction(actSetting);
     menuOption->addAction(actReset);
@@ -313,6 +500,7 @@ void MainWindow::initMenu() {
     connect(actAbout, &QAction::triggered, this, &MainWindow::about);
     connect(actReset, &QAction::triggered, this, &MainWindow::restart);
     connect(actSetting, &QAction::triggered, this, &MainWindow::openSettings);
+    connect(actShowPluginManager, &QAction::triggered, this, &MainWindow::showPluginManager);
 }
 
 /**
@@ -337,19 +525,33 @@ void MainWindow::createCol(int col, QString title, QFont font, QColor color) {
  * @param row Row index.
  * @param info Pointer to the plugin object.
  */
-void MainWindow::createRow(int row, WPlugin *info) {
-    if (row >= d->ui->tablePlugin->rowCount())
-        return;
-    QTableWidgetItem *item = nullptr;
-    QString str;
-    QStringList list = {Plugin::Name, Plugin::Version, Plugin::Author,
-                        Plugin::Path};
-    for (int i = 0; i <= list.length() - 1; i++) {
-        str = qvariant_cast<QString>(info->getMetaData(list[i]));
-        item = new QTableWidgetItem(str);
-        item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-        d->ui->tablePlugin->setItem(row, i, item);
-    }
+void MainWindow::createRow(int row, we::WPlugin *info) {
+    if (!info) return;
+    
+    // Name
+    QTableWidgetItem *nameItem = new QTableWidgetItem(info->getMetaData(Plugin::Name).toString());
+    d->ui->tablePlugin->setItem(row, 0, nameItem);
+    
+    // UUID
+    QTableWidgetItem *uuidItem = new QTableWidgetItem(info->getUuid().toString());
+    d->ui->tablePlugin->setItem(row, 1, uuidItem);
+    
+    // Type
+    QTableWidgetItem *typeItem = new QTableWidgetItem(info->getMetaData(Plugin::Type).toString());
+    d->ui->tablePlugin->setItem(row, 2, typeItem);
+    
+    // State
+    QString stateStr = WPluginStateMachine::stateToString(info->getState());
+    QTableWidgetItem *stateItem = new QTableWidgetItem(stateStr);
+    d->ui->tablePlugin->setItem(row, 3, stateItem);
+    
+    // Path
+    QTableWidgetItem *pathItem = new QTableWidgetItem(info->getMetaData(Plugin::Path).toString());
+    d->ui->tablePlugin->setItem(row, 4, pathItem);
+    
+    // Author
+    QTableWidgetItem *authorItem = new QTableWidgetItem(info->getMetaData(Plugin::Author).toString());
+    d->ui->tablePlugin->setItem(row, 5, authorItem);
 }
 
 /**
@@ -398,12 +600,12 @@ void MainWindow::tray(QSystemTrayIcon::ActivationReason reason) {
  * @brief Shows the main window (used from tray context menu).
  */
 void MainWindow::showPanel() {
-    this->show();
-    this->raise();
+    show();
+    activateWindow();
 }
 
 /**
- * @brief Opens the About dialog.
+ * @brief Shows the about dialog.
  */
 void MainWindow::about() {
     if (d->aboutWnd == nullptr)
@@ -414,7 +616,7 @@ void MainWindow::about() {
 }
 
 /**
- * @brief Restarts the application via launcher.
+ * @brief Restarts the application.
  */
 void MainWindow::restart() {
     WShellExecute::asyncExecute(
@@ -457,18 +659,35 @@ void MainWindow::openSettings() {
 }
 
 /**
- * @brief Handles double-click on plugin table: sets clicked text to command
- * line.
+ * @brief Handles the plugin table cell double click event.
  * @param row Row index.
  * @param column Column index.
  */
 void MainWindow::on_tablePlugin_cellDoubleClicked(int row, int column) {
     auto item = d->ui->tablePlugin->item(row, column);
     d->ui->editCmd->setText(item->text());
+    /*
+    Q_UNUSED(column);
+    auto manager = PClass->pluginManager();
+    auto plugins = manager->allPluginsInst();
+    
+    if (row >= 0 && row < plugins.size()) {
+        WPlugin *plugin = plugins[row];
+        if (plugin) {
+            // Toggle plugin state
+            if (plugin->available()) {
+                manager->hotUnloadPlugin(plugin);
+            } else {
+                manager->loadPlugin(plugin);
+            }
+            initTable(); // Refresh the table
+        }
+    }
+        */
 }
 
 /**
- * @brief Executes the command entered in the edit field.
+ * @brief Handles the command button click event.
  */
 void MainWindow::on_btnCmd_clicked() {
     QString str = d->ui->editCmd->text();

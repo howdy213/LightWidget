@@ -1,8 +1,9 @@
 QT += core gui widgets
+QT += statemachine
+CONFIG += c++2b
 
 TEMPLATE = lib
 CONFIG += plugin
-CONFIG += c++20
 TARGET = LightMain
 
 LIBS += -luser32 -lshell32
@@ -36,4 +37,7 @@ HEADERS +=  \
 FORMS += \
     aboutwindow.ui \
     mainwindow.ui
+
+DISTFILES += \
+    metadata.json
 

@@ -37,7 +37,8 @@ class LightMainPrivate;
 class LightMain : public QObject, public WPluginInterface {
 public:
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID WPluginInterface_iid)
+    Q_PLUGIN_METADATA(IID WPluginInterface_iid FILE "metadata.json")
+
     Q_INTERFACES(WPluginInterface)
 public:
     LightMain();
@@ -53,7 +54,7 @@ private:
     LightMainPrivate *d = nullptr;
     void onMainWindowExtension(const WEvent &event);
     QVariant onGetMainWindowState(const WEvent &event);
-    void addExtensionAction(QAction *action, const QString &menuPath);
+    void addExtensionAction(QString menuOpType, QAction *action, const QString &menuPath);
 
     QList<QAction *> m_pluginActions;
     QList<QDockWidget *> m_pluginDocks;

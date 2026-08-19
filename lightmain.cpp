@@ -36,6 +36,7 @@
 #include "WECore/plugin/wplugin.h"
 #include "WECore/plugin/wplugindata.h"
 #include "WECore/plugin/wpluginmessage.h"
+#include "WECore/plugin/wpluginmanager.h"
 #include "WECore/service/wserviceregistry.h"
 #include "WECore/widget/wwidgetmanager.h"
 
@@ -59,7 +60,7 @@ public:
 LightMain::LightMain() { d = new LightMainPrivate; }
 
 /**
- * @brief Destroys the LightMain object.
+ * @brief Destroys a LightMain object.
  */
 LightMain::~LightMain() {
     if (d->w) {
@@ -181,10 +182,9 @@ void LightMain::onMainWindowExtension(const WEvent &event) {
 
     if (event.topic.endsWith(Event::MenuAction)) {
         QAction *action = qobject_cast<QAction *>(object);
-        if (action) {
-            QString menuPath = map.value(Key::MenuPath).toString();
-            addExtensionAction(action, "功能/" + menuPath);
-        }
+        QString menuPath = map.value(Key::MenuPath).toString();
+        QString menuOpType = map.value(Key::MenuOpType).toString();
+        addExtensionAction(menuOpType, action, "功能/" + menuPath);
     } else if (event.topic.endsWith(Event::ToolAction)) {
         QAction *action = qobject_cast<QAction *>(object);
         if (action && d->w) {
@@ -209,29 +209,69 @@ void LightMain::onMainWindowExtension(const WEvent &event) {
  * @param action The action to add.
  * @param menuPath The menu path (e.g., "功能/SubMenu").
  */
-void LightMain::addExtensionAction(QAction *action, const QString &menuPath) {
+void LightMain::addExtensionAction(QString menuOpType, QAction *action, const QString &menuPath) {
     if (!d->w || !action)
         return;
+    if (menuOpType != Key::MenuOpCreate && menuOpType != Key::MenuOpDelete) menuOpType = Key::MenuOpCreate;
+    
     // Find or create the menu path
     QStringList parts = menuPath.split('/', Qt::SkipEmptyParts);
     QMenu *targetMenu = nullptr;
     QMenuBar *bar = d->w->menuBar();
-    for (const QString &part : std::as_const(parts)) {
-        QMenu *found = bar->findChild<QMenu *>(part);
-        if (found) {
-            targetMenu = found;
-        } else {
-            if (targetMenu) {
-                targetMenu = targetMenu->addMenu(part);
+    if (menuOpType == Key::MenuOpDelete) {
+        // Navigate through the menu path to find the target menu
+        for (const QString &part : std::as_const(parts)) {
+            QMenu *found = bar->findChild<QMenu *>(part);
+            if (found) {
+                targetMenu = found;
             } else {
-                targetMenu = bar->addMenu(part);
+                // Menu path not found, can't delete
+                return;
             }
-            targetMenu->setObjectName(part);
+        }
+        
+        // Remove the action from the target menu
+        if (targetMenu) {
+            targetMenu->removeAction(action);
+        }
+        
+        // Remove the action from the plugin actions list
+        m_pluginActions.removeAll(action);
+        
+        // Optionally: Clean up empty menus (optional, can be removed if not needed)
+        if (targetMenu && targetMenu->actions().isEmpty()) {
+            // Remove empty menus from the hierarchy
+            QMenu *parentMenu = nullptr;
+            QWidget *parentWidget = targetMenu->parentWidget();
+            if (parentWidget) {
+                parentMenu = qobject_cast<QMenu*>(parentWidget);
+            }
+            
+            if (parentMenu) {
+                bar->removeAction(targetMenu->menuAction());
+                targetMenu->deleteLater();
+            }
         }
     }
-    if (targetMenu) {
-        targetMenu->addAction(action);
-        m_pluginActions.append(action);
+    else if (menuOpType == Key::MenuOpCreate)
+    {
+        for (const QString &part : std::as_const(parts)) {
+            QMenu *found = bar->findChild<QMenu *>(part);
+            if (found) {
+                targetMenu = found;
+            } else {
+                if (targetMenu) {
+                    targetMenu = targetMenu->addMenu(part);
+                } else {
+                    targetMenu = bar->addMenu(part);
+                }
+                targetMenu->setObjectName(part);
+            }
+        }
+        if (targetMenu) {
+            targetMenu->addAction(action);
+            m_pluginActions.append(action);
+        }
     }
 }
 
