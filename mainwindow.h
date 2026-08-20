@@ -2,7 +2,7 @@
  * @file mainwindow.h
  * @brief Header file for the main window class.
  * @author howdy213
- * @date 2026-05-04
+ * @date 2026-08-20
  * @version 2.0.0
  *
  * @copyright Copyright 2025-2026 howdy213
@@ -69,7 +69,6 @@ private:
     void createCol(int col, QString title, QFont font, QColor color);
     void createRow(int row, we::WPlugin *info);
     QStringList ReadLinkFile();
-    void showPluginManager();
     void updatePluginTable(QTableWidget *table);
 
 public:
@@ -82,6 +81,8 @@ private slots:
     void about();
     void restart();
     void openSettings();
+    void showPluginManager();
+    void restartAsPluginManagerMode();
     void on_tablePlugin_cellDoubleClicked(int row, int column);
     void on_tableWidget_cellDoubleClicked(int row, int column);
     void on_btnCmd_clicked();
