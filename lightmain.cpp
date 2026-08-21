@@ -87,8 +87,6 @@ bool LightMain::init(WMessage &msg) {
     auto plugin = qvariant_cast<WPlugin *>(msg.map[Data::Plugin]);
     PluginData::setPlugin(plugin);
     auto params = qvariant_cast<QStringList>(msg.map[Data::Params]);
-    plugin->setMetaData(Plugin::Name, "LightMain");
-    plugin->setMetaData(Plugin::Author, "WidgetExplorer");
 
     auto config = PClass->configManager();
     if (params.length() >= 1)
@@ -119,8 +117,7 @@ bool LightMain::init(WMessage &msg) {
 
     if (!qvariant_cast<bool>(config->get(Plugin::Autorun))) {
         if (!PluginData::getPlugin()
-                 ->getMetaData(Plugin::Init)
-                 .toString()
+                 ->initArg()
                  .split(' ')
                  .contains("-hide"))
             d->w->show();

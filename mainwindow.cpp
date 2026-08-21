@@ -169,9 +169,9 @@ void MainWindow::showPluginManager() {
 
     // 获取插件显示文本
     auto pluginDisplayText = [](WPlugin *plugin) -> QString {
-        QString name = plugin->getMetaData(Plugin::Name).toString();
+        QString name = plugin->name();
         if (name.isEmpty())
-            name = plugin->getUuid().toString();
+            name = plugin->uuid().toString();
         QString state = WPluginStateMachine::stateToString(plugin->getState());
         return QString("%1(%2)").arg(name, state);
     };
@@ -298,7 +298,7 @@ void MainWindow::showPluginManager() {
         }
 
         // 保存到配置文件
-        QString configPath = plugin->getMetaData(Plugin::ConfigPath).toString();
+        QString configPath = plugin->configPath();
         if (!configPath.isEmpty()) {
             plugin->getMetaDocument().save(configPath);
             QMessageBox::information(&dialog, "保存", "修改已保存。");
@@ -341,17 +341,17 @@ void MainWindow::updatePluginTable(QTableWidget *table) {
     for (auto plugin : plugins) {
         // Plugin name
         QTableWidgetItem *nameItem =
-            new QTableWidgetItem(plugin->getMetaData(Plugin::Name).toString());
+            new QTableWidgetItem(plugin->name());
         table->setItem(row, 0, nameItem);
 
         // UUID
         QTableWidgetItem *uuidItem =
-            new QTableWidgetItem(plugin->getUuid().toString());
+            new QTableWidgetItem(plugin->uuid().toString());
         table->setItem(row, 1, uuidItem);
 
         // Type
         QTableWidgetItem *typeItem =
-            new QTableWidgetItem(plugin->getMetaData(Plugin::Type).toString());
+            new QTableWidgetItem(plugin->type());
         table->setItem(row, 2, typeItem);
 
         // State
@@ -361,12 +361,12 @@ void MainWindow::updatePluginTable(QTableWidget *table) {
 
         // Path
         QTableWidgetItem *pathItem =
-            new QTableWidgetItem(plugin->getMetaData(Plugin::Path).toString());
+            new QTableWidgetItem(plugin->path());
         table->setItem(row, 4, pathItem);
 
         // Author
         QTableWidgetItem *authorItem =
-            new QTableWidgetItem(plugin->getMetaData(Plugin::Author).toString());
+            new QTableWidgetItem(plugin->author());
         table->setItem(row, 5, authorItem);
 
         // Add custom metadata columns
@@ -606,16 +606,16 @@ void MainWindow::createRow(int row, we::WPlugin *info) {
 
     // Name
     QTableWidgetItem *nameItem =
-        new QTableWidgetItem(info->getMetaData(Plugin::Name).toString());
+        new QTableWidgetItem(info->name());
     d->ui->tablePlugin->setItem(row, 0, nameItem);
 
     // UUID
-    QTableWidgetItem *uuidItem = new QTableWidgetItem(info->getUuid().toString());
+    QTableWidgetItem *uuidItem = new QTableWidgetItem(info->uuid().toString());
     d->ui->tablePlugin->setItem(row, 1, uuidItem);
 
     // Type
     QTableWidgetItem *typeItem =
-        new QTableWidgetItem(info->getMetaData(Plugin::Type).toString());
+        new QTableWidgetItem(info->type());
     d->ui->tablePlugin->setItem(row, 2, typeItem);
 
     // State
@@ -625,12 +625,12 @@ void MainWindow::createRow(int row, we::WPlugin *info) {
 
     // Path
     QTableWidgetItem *pathItem =
-        new QTableWidgetItem(info->getMetaData(Plugin::Path).toString());
+        new QTableWidgetItem(info->path());
     d->ui->tablePlugin->setItem(row, 4, pathItem);
 
     // Author
     QTableWidgetItem *authorItem =
-        new QTableWidgetItem(info->getMetaData(Plugin::Author).toString());
+        new QTableWidgetItem(info->author());
     d->ui->tablePlugin->setItem(row, 5, authorItem);
 }
 
