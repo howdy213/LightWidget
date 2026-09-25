@@ -26,13 +26,15 @@
 #include "ui_mainwindow.h"
 
 #include <QApplication>
+#include <QCoreApplication>
 #include <QDockWidget>
 #include <QMenu>
 #include <QMenuBar>
+#include <QTranslator>
 #include <QWidget>
 #include <Windows.h>
 
-#include "WECore/metadata/WMetaDocument.h"
+#include "WECore/metadata/wmetadocument.h"
 #include "WECore/plugin/wplugin.h"
 #include "WECore/plugin/wplugindata.h"
 #include "WECore/plugin/wpluginmessage.h"
@@ -112,6 +114,23 @@ bool LightMain::init(WMessage &msg) {
             wmgr->publish(reply);
         });
 
+    // Install the plugin translation. The global configuration decides the
+    // language (default zh_CN; en_US is the source language and needs no file).
+    // The translator is static so it survives this call, and the file is embedded
+    // in the plugin resources as ":/i18n/LightMain_<locale>.qm".
+    static QTranslator translator;
+    QString language = config->hasArg(Config::Language)
+                           ? config->get(Config::Language).toString()
+                           : QString();
+    if (language.isEmpty())
+        language = QStringLiteral("zh_CN");
+    if (language != QStringLiteral("en_US")) {
+        if (translator.load(QStringLiteral(":/i18n/LightMain_") + language))
+            QCoreApplication::installTranslator(&translator);
+        else
+            qWarning() << "Failed to load the plugin translation:" << language;
+    }
+
     d->w = new MainWindow;
     d->w->init();
 
@@ -158,11 +177,11 @@ void LightMain::createTray() {
     auto *trayMenu = new QMenu(d->w);
     QObject::connect(d->tray, &QSystemTrayIcon::activated, d->w,
                      &MainWindow::tray);
-    auto *showPanelAction = new QAction("显示", d->w);
+    auto *showPanelAction = new QAction(tr("Show"), d->w);
     QObject::connect(showPanelAction, &QAction::triggered, d->w,
                      &MainWindow::showPanel);
     trayMenu->addAction(showPanelAction);
-    auto *quitAction = new QAction("退出", d->w);
+    auto *quitAction = new QAction(tr("Quit"), d->w);
     QObject::connect(quitAction, &QAction::triggered, d->w, &QApplication::quit);
     trayMenu->addAction(quitAction);
     d->tray->setContextMenu(trayMenu);
@@ -181,7 +200,7 @@ void LightMain::onMainWindowExtension(const WEvent &event) {
         QAction *action = qobject_cast<QAction *>(object);
         QString menuPath = map.value(Key::MenuPath).toString();
         QString menuOpType = map.value(Key::MenuOpType).toString();
-        addExtensionAction(menuOpType, action, "功能/" + menuPath);
+        addExtensionAction(menuOpType, action, tr("Functions") + "/" + menuPath);
     } else if (event.topic.endsWith(Event::ToolAction)) {
         QAction *action = qobject_cast<QAction *>(object);
         if (action && d->w) {
@@ -204,7 +223,7 @@ void LightMain::onMainWindowExtension(const WEvent &event) {
 /**
  * @brief Adds an action to a specified menu path.
  * @param action The action to add.
- * @param menuPath The menu path (e.g., "功能/SubMenu").
+ * @param menuPath The menu path (e.g., "Functions/SubMenu").
  */
 void LightMain::addExtensionAction(QString menuOpType, QAction *action, const QString &menuPath) {
     if (!d->w || !action)

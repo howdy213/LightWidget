@@ -92,4 +92,45 @@ private slots:
 private:
     MainWindowPrivate *d = nullptr;
 };
+
+#include "WECore/config/WConfigCustomType.h"
+#include <QLabel>
+
+// Range slider editor: a QSlider plus a value label, implementing the
+// WCustomEditorInterface contract (the framework requires the valueEdited signal).
+class RangeSliderEditor : public QWidget, public we::config::WCustomEditorInterface {
+    Q_OBJECT
+    QSlider *m_slider;
+    QLabel *m_valueLabel;
+public:
+    explicit RangeSliderEditor(QWidget *parent = nullptr) : QWidget(parent) {
+        QHBoxLayout *layout = new QHBoxLayout(this);
+        layout->setContentsMargins(0, 0, 0, 0);
+        layout->setSpacing(6);
+        // Force the horizontal orientation so the slider is never stretched
+        // vertically, and widen the range so demo values above 100 fit.
+        m_slider = new QSlider(Qt::Horizontal, this);
+        m_slider->setRange(0, 200);
+        m_valueLabel = new QLabel(this);
+        m_valueLabel->setMinimumWidth(36);
+        m_valueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        layout->addWidget(m_slider, 1);
+        layout->addWidget(m_valueLabel);
+        connect(m_slider, &QSlider::valueChanged, this,
+                [this](int v) {
+                    m_valueLabel->setText(QString("%1%").arg(v));
+                    emit valueEdited();
+                });
+    }
+    QVariant editValue() const override { return m_slider->value(); }
+    void setEditValue(const QVariant &v) override {
+        QSignalBlocker blocker(m_slider);
+        m_slider->setValue(v.toInt());
+        m_valueLabel->setText(QString("%1%").arg(v.toInt()));
+    }
+    QSize sizeHint() const override { return QSize(200, 28); }
+signals:
+    void valueEdited();
+};
+
 #endif // MAINWINDOW_H

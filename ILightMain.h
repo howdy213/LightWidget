@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file iLightMain.h
  * @brief Defines constant namespaces for event and key identifiers used in the main application interface.
  * @author howdy213

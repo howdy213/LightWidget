@@ -1,6 +1,6 @@
 QT += core gui widgets
 QT += statemachine
-CONFIG += c++2b
+CONFIG += c++20
 
 TEMPLATE = lib
 CONFIG += plugin
@@ -41,3 +41,11 @@ FORMS += \
 DISTFILES += \
     metadata.json
 
+# Run lupdate / lrelease from Qt Creator (Tools > External > Linguist) to
+# regenerate the .ts and build the .qm from it.
+TRANSLATIONS += \
+    translations/LightMain_zh_CN.ts
+
+# Build the .qm files and embed them into the plugin resources as
+# ":/i18n/LightMain_<locale>.qm", so the plugin can load them at runtime.
+CONFIG += lrelease embed_translations
